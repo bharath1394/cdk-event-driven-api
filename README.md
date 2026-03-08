@@ -66,7 +66,6 @@ curl -X POST "$API_URL" \
   -H "Content-Type: application/json" \
   -d '{"data": "Production order #1"}'
 ```
-
 **Expected response:**
 
 ```json
@@ -75,6 +74,24 @@ curl -X POST "$API_URL" \
   "requestId": "abc-123-def-456"
 }
 ```
+
+**Verification:**
+```
+# Wait 5 seconds then scan
+aws dynamodb scan --table-name order-events
+```
+
+### Output
+```
+{
+  "Items": [
+    { "requestId": {"S": "abc-123"}, "processedBy": {"S": "Consumer1"}, "data": {"S": "sort key test"} },
+    { "requestId": {"S": "abc-123"}, "processedBy": {"S": "Consumer2"}, "data": {"S": "sort key test"} }
+  ],
+  "Count": 2
+}
+```
+
 
 ### Verify Processing
 
