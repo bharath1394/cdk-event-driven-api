@@ -14,16 +14,32 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       run: ${{ steps.check.outputs.run }}
+      is_pr: ${{ steps.check.outputs.is_pr }}
     steps:
       - name: Check for /run:cdk comment
         id: check
         run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Comment: ${{ github.event.comment.body }}"
+          echo "Issue: ${{ github.event.issue.pull_request }}"
+          
+          # Check if comment contains /run:cdk
           if [[ "${{ github.event.comment.body }}" == *"/run:cdk"* ]]; then
             echo "run=true" >> $GITHUB_OUTPUT
             echo "✅ Triggered by comment: /run:cdk"
           else
             echo "run=false" >> $GITHUB_OUTPUT
             echo "❌ Comment does not contain /run:cdk"
+            exit 0
+          fi
+          
+          # Check if this is a PR comment
+          if [ -n "${{ github.event.issue.pull_request }}" ]; then
+            echo "is_pr=true" >> $GITHUB_OUTPUT
+            echo "✅ Comment is on a PR"
+          else
+            echo "is_pr=false" >> $GITHUB_OUTPUT
+            echo "❌ Comment is not on a PR"
           fi
 
   call-cdk-diff:
@@ -47,6 +63,6 @@ jobs:
   call-cdk-deploy:
     name: Run CDK Deploy
     needs: [check-trigger, approve-diff]
-    if: github.event.pull_request.base.ref == 'main' && needs.check-trigger.outputs.run == 'true'
+    if: github.event.issue.pull_request && github.event.issue.pull_request.html_url && needs.check-trigger.outputs.run == 'true' && needs.check-trigger.outputs.is_pr == 'true'
     uses: ./.github/workflows/reusable-cdk-deploy.yml
     secrets: inherit
