@@ -11,41 +11,26 @@ permissions:
 jobs:
   check-trigger:
     name: Check Trigger
+    if: github.event.issue.pull_request  # Only run on PR comments
     runs-on: ubuntu-latest
     outputs:
-      run: ${{ steps.check.outputs.run }}
-      is_pr: ${{ steps.check.outputs.is_pr }}
+      should_run: 'true'
     steps:
       - name: Check for /run:cdk comment
-        id: check
         run: |
-          echo "Event: ${{ github.event_name }}"
-          echo "Comment: ${{ github.event.comment.body }}"
-          echo "Issue: ${{ github.event.issue.pull_request }}"
+          COMMENT="${{ github.event.comment.body }}"
+          echo "Comment received: $COMMENT"
           
-          # Check if comment contains /run:cdk
-          if [[ "${{ github.event.comment.body }}" == *"/run:cdk"* ]]; then
-            echo "run=true" >> $GITHUB_OUTPUT
-            echo "✅ Triggered by comment: /run:cdk"
+          if [[ "$COMMENT" == *"/run:cdk"* ]]; then
+            echo "✅ Found /run:cdk - proceeding with diff and deploy"
           else
-            echo "run=false" >> $GITHUB_OUTPUT
             echo "❌ Comment does not contain /run:cdk"
-            exit 0
-          fi
-          
-          # Check if this is a PR comment
-          if [ -n "${{ github.event.issue.pull_request }}" ]; then
-            echo "is_pr=true" >> $GITHUB_OUTPUT
-            echo "✅ Comment is on a PR"
-          else
-            echo "is_pr=false" >> $GITHUB_OUTPUT
-            echo "❌ Comment is not on a PR"
+            exit 1
           fi
 
   call-cdk-diff:
     name: Run CDK Diff
     needs: check-trigger
-    if: needs.check-trigger.outputs.run == 'true'
     uses: ./.github/workflows/reusable-cdk-diff.yml
     secrets: inherit
 
@@ -63,6 +48,5 @@ jobs:
   call-cdk-deploy:
     name: Run CDK Deploy
     needs: [check-trigger, approve-diff]
-    if: github.event.issue.pull_request && github.event.issue.pull_request.html_url && needs.check-trigger.outputs.run == 'true' && needs.check-trigger.outputs.is_pr == 'true'
     uses: ./.github/workflows/reusable-cdk-deploy.yml
     secrets: inherit
