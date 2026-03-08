@@ -3,6 +3,9 @@ name: Reusable CDK Deploy
 on:
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   cdk-deploy:
     name: CDK Deploy
