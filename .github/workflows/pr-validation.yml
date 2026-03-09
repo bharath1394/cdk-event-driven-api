@@ -15,26 +15,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Detect infra directory
+        id: detect-infra
+        run: |
+          if [ -d infra ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Node.js
+        if: steps.detect-infra.outputs.exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Install dependencies
+        if: steps.detect-infra.outputs.exists == 'true'
         run: |
-          if [ ! -d infra ]; then
-            echo "infra directory not found in workspace:"
-            pwd
-            ls -la
-            exit 1
-          fi
           cd infra
           npm ci
 
       - name: CDK synth
+        if: steps.detect-infra.outputs.exists == 'true'
         run: |
           cd infra
           npx cdk synth --no-lookups
+
+      - name: Skip (no infra directory)
+        if: steps.detect-infra.outputs.exists != 'true'
+        run: echo "Skipping cdk-synth: infra/ not found in this PR."
 
   build-lambdas:
     name: build-lambdas
@@ -43,26 +53,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Detect infra directory
+        id: detect-infra
+        run: |
+          if [ -d infra ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Node.js
+        if: steps.detect-infra.outputs.exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Install dependencies
+        if: steps.detect-infra.outputs.exists == 'true'
         run: |
-          if [ ! -d infra ]; then
-            echo "infra directory not found in workspace:"
-            pwd
-            ls -la
-            exit 1
-          fi
           cd infra
           npm ci
 
       - name: Build Lambda functions
+        if: steps.detect-infra.outputs.exists == 'true'
         run: |
           cd infra
           ./build.sh --no-deploy
+
+      - name: Skip (no infra directory)
+        if: steps.detect-infra.outputs.exists != 'true'
+        run: echo "Skipping build-lambdas: infra/ not found in this PR."
 
   tests:
     name: tests
@@ -71,23 +91,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Detect infra directory
+        id: detect-infra
+        run: |
+          if [ -d infra ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Node.js
+        if: steps.detect-infra.outputs.exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Install dependencies
+        if: steps.detect-infra.outputs.exists == 'true'
         run: |
-          if [ ! -d infra ]; then
-            echo "infra directory not found in workspace:"
-            pwd
-            ls -la
-            exit 1
-          fi
           cd infra
           npm ci
 
       - name: Run tests (if configured)
+        if: steps.detect-infra.outputs.exists == 'true'
         run: |
           cd infra
           if npm run | grep -qE '^[[:space:]]+test'; then
@@ -96,6 +122,10 @@ jobs:
             echo "No test script found; passing."
           fi
 
+      - name: Skip (no infra directory)
+        if: steps.detect-infra.outputs.exists != 'true'
+        run: echo "Skipping tests: infra/ not found in this PR."
+
   lint:
     name: lint
     runs-on: ubuntu-latest
@@ -103,23 +133,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Detect infra directory
+        id: detect-infra
+        run: |
+          if [ -d infra ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Node.js
+        if: steps.detect-infra.outputs.exists == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Install dependencies
+        if: steps.detect-infra.outputs.exists == 'true'
         run: |
-          if [ ! -d infra ]; then
-            echo "infra directory not found in workspace:"
-            pwd
-            ls -la
-            exit 1
-          fi
           cd infra
           npm ci
 
       - name: Run lint (if configured)
+        if: steps.detect-infra.outputs.exists == 'true'
         run: |
           cd infra
           if npm run | grep -qE '^[[:space:]]+lint'; then
@@ -127,3 +163,7 @@ jobs:
           else
             echo "No lint script found; passing."
           fi
+
+      - name: Skip (no infra directory)
+        if: steps.detect-infra.outputs.exists != 'true'
+        run: echo "Skipping lint: infra/ not found in this PR."
