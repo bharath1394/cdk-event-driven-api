@@ -1,0 +1,15 @@
+{
+  "name": "api-handler",
+  "version": "1.0.0",
+  "description": "API handler Lambda function",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sns": "^3.500.0"
+  }
+}

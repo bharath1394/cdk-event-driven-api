@@ -1,0 +1,15 @@
+{
+  "name": "consumer2",
+  "version": "1.0.0",
+  "description": "Consumer 2 Lambda function",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.500.0"
+  }
+}
