@@ -2,7 +2,7 @@ name: CDK Diff & Deploy
 
 on:
   issue_comment:
-    types: [created]
+    types: [created, edited]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -15,48 +15,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  check-trigger:
-    name: Check Trigger
-    if: github.event.issue.pull_request || github.event_name == 'workflow_dispatch'  # Run on PR comments or manual trigger
-    runs-on: ubuntu-latest
-    outputs:
-      should_run: 'true'
-    steps:
-      - name: Check for /run:cdk comment
-        run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "✅ Manual trigger via workflow_dispatch"
-          else
-            COMMENT="${{ github.event.comment.body }}"
-            echo "Comment received: $COMMENT"
-            
-            if [[ "$COMMENT" == *"/run:cdk"* ]]; then
-              echo "✅ Found /run:cdk - proceeding with diff and deploy"
-            else
-              echo "❌ Comment does not contain /run:cdk"
-              exit 1
-            fi
-          fi
-
-  call-cdk-diff:
-    name: Run CDK Diff
-    needs: check-trigger
-    uses: ./.github/workflows/reusable-cdk-diff.yml
-    secrets: inherit
-
-  approve-diff:
-    name: Approve CDK Changes
-    needs: call-cdk-diff
-    runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    steps:
-      - name: Waiting for approval
-        run: echo "✅ CDK Diff approved! Proceeding..."
-
-  call-cdk-deploy:
-    name: Run CDK Deploy
-    needs: [check-trigger, approve-diff]
-    uses: ./.github/workflows/reusable-cdk-deploy.yml
-    secrets: inherit
+  diff-deploy:
+    name: 
+    uses: ./.github/workflows/reusable-cdk-diff-deploy.yml
